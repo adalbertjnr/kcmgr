@@ -20,9 +20,9 @@ type Model struct {
 	ContextMessage       string
 }
 
-func New(currentContext string, contexts []list.Item) Model {
+func New(appTitle string, currentContext string, contexts []list.Item) Model {
 	list := list.New(contexts, list.NewDefaultDelegate(), 0, 0)
-	list.Title = "Kubernetes Contexts"
+	list.Title = appTitle
 
 	setupKeyBindings(&list)
 	highlightCurrentContext(currentContext, &list)
