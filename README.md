@@ -1,4 +1,4 @@
-# kctx-navigator
+# kcmgr - Kubernetes Context Manager
 
 A **simple Go TUI app** to help you **navigate**, **switch**, and **delete** Kubernetes contexts interactively from your terminal.
 
