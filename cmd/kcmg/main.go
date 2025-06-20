@@ -37,7 +37,8 @@ func main() {
 		return
 	}
 
-	appModel := bubble.New(currentContext, contextItems)
+	appTitle := "Current + Available Contexts"
+	appModel := bubble.New(appTitle, currentContext, contextItems)
 
 	p := tea.NewProgram(appModel, tea.WithAltScreen())
 	m, err := p.Run()
