@@ -3,10 +3,14 @@ package bubble
 import (
 	"fmt"
 	"log"
+	"log/slog"
 
+	"github.com/adalbertjnr/kcmgr/internal/client"
 	"github.com/adalbertjnr/kcmgr/internal/kubectl"
 	"github.com/adalbertjnr/kcmgr/internal/ui"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -34,7 +38,67 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.DetailedView = ui.DetailedViewPadding.Render(detailedContext)
 			}
 		}
+
+	case spinner.TickMsg:
+		if m.namespaceState() && m.LoadingNamespaces {
+			var cmd tea.Cmd
+			m.Spinner, cmd = m.Spinner.Update(msg)
+			return m, cmd
+		}
+
+	case namespacesOutput:
+		if m.namespaceState() && m.LoadingNamespaces {
+
+			if msg.Err != nil {
+				msg.Namespaces = []string{msg.Err.Error()}
+			}
+
+			items := make([]list.Item, len(msg.Namespaces))
+			for i, namespace := range msg.Namespaces {
+				items[i] = &kubectl.Namespace{Name: namespace}
+			}
+
+			m.Namespaces.SetItems(items)
+			m.LoadingNamespaces = false
+			return m, nil
+		}
+
 	case tea.KeyMsg:
+		if m.namespaceState() && m.LoadingNamespaces {
+			switch msg.String() {
+			case "esc", "ctrl+c", "q":
+				m.State = normalState
+				m.LoadingNamespaces = false
+				return m, nil
+			}
+		}
+		if !m.LoadingNamespaces && m.namespaceState() {
+			var cmd tea.Cmd
+			m.Namespaces, cmd = m.Namespaces.Update(msg)
+			switch msg.String() {
+			case "enter":
+				selectedNamespace := m.Namespaces.SelectedItem().(*kubectl.Namespace)
+				ctx := m.List.SelectedItem().(*kubectl.Context).Name
+				if err := kubectl.SetKubernetesContext(ctx); err != nil {
+					return m, tea.Quit
+				}
+				if err := kubectl.SetDefaultNamespace(selectedNamespace.Name); err != nil {
+					slog.Error("update", "message", "settings defualt namespace", "error", err)
+					return m, tea.Quit
+				}
+				m.ContextMessage = ui.SuccessMessage.Render(
+					fmt.Sprintf("Context switched to: %s\nNamespace switched to: %s", ctx, selectedNamespace),
+				)
+				return m, tea.Quit
+			case "esc", "ctrl+c", "q":
+				m.State = normalState
+				m.LoadingNamespaces = false
+				return m, nil
+			}
+
+			return m, cmd
+		}
+
 		if m.deleteState() {
 			switch msg.String() {
 			case "left", "h", "tab":
@@ -71,6 +135,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				switchContext,
 				kubectl.SetKubernetesContext,
 			)
+		case key.Matches(msg, keys.NamespacePrompt):
+			if ctx, ok := m.List.SelectedItem().(*kubectl.Context); ok {
+				m.State = namespaceSelectState
+				m.TargetContext = ctx.Name
+				m.LoadingNamespaces = true
+				m.Namespaces.SetItems([]list.Item{})
+				return m, tea.Batch(m.Spinner.Tick, m.fetchNamespacesCmd(ctx.Name))
+			}
 		}
 	}
 
@@ -106,7 +178,7 @@ func (m Model) handleContextAction(verb verb, actionFunc func(string) error) (te
 	case deleteContext:
 		contextItems, err := kubectl.KubernetesContexts()
 		if err != nil {
-			log.Printf("Failed refreshing contexts: %v", err)
+			slog.Error("update", "message", "failed refreshing contexts", "error", err)
 			return m, nil
 		}
 
@@ -115,13 +187,27 @@ func (m Model) handleContextAction(verb verb, actionFunc func(string) error) (te
 		m.PendingDeleteContext = nil
 		return m, nil
 	case switchContext:
-		m.ContextMessage = ui.SuccessMessage.Render(fmt.Sprintf("️️⚙️ %sContext switched to: %s", " ", m.List.SelectedItem().(*kubectl.Context).Name))
+		m.ContextMessage = ui.SuccessMessage.Render(
+			fmt.Sprintf("️️Context switched to: %s", m.List.SelectedItem().(*kubectl.Context).Name),
+		)
 		return m, tea.Quit
 	}
 
 	return m, tea.Quit
 }
 
-func (m Model) deleteState() bool {
-	return m.State == deleteState
+type namespacesOutput struct {
+	Namespaces []string
+	Err        error
+}
+
+func (m Model) fetchNamespacesCmd(contextName string) tea.Cmd {
+	return func() tea.Msg {
+		namespaces, err := client.GetNamespacesByContext(m.KubeConfig, contextName)
+		if err != nil {
+			slog.Error("update", "message", "fetch namespaces cmd", "error", err)
+		}
+		slog.Info("fetch namespaces", "namespaces", namespaces)
+		return namespacesOutput{Namespaces: namespaces, Err: err}
+	}
 }
