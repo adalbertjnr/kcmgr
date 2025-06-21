@@ -3,10 +3,7 @@ package bubble
 import (
 	"github.com/adalbertjnr/kcmgr/internal/kubectl"
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/lipgloss"
 )
-
-var confirmStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("9")).Bold(true).Padding(1, 2)
 
 type Model struct {
 	Current              string

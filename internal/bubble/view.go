@@ -3,6 +3,7 @@ package bubble
 import (
 	"fmt"
 
+	"github.com/adalbertjnr/kcmgr/internal/ui"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -24,7 +25,7 @@ func (m Model) View() string {
 			cancelButton,
 		)
 
-		box := confirmStyle.Render(confirmationText, buttons)
+		box := ui.ConfirmStyle.Render(confirmationText, buttons)
 
 		return lipgloss.Place(
 			m.Width,

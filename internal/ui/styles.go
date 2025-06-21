@@ -3,6 +3,8 @@ package ui
 import "github.com/charmbracelet/lipgloss"
 
 var (
+	ConfirmStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("9")).Bold(true).Padding(1, 2)
+
 	SuccessMessage = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#00FF00")).
 			Bold(true)
