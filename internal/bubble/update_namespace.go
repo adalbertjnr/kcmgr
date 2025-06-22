@@ -24,6 +24,8 @@ func (m Model) updateNamespaceState(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case namespacesOutput:
 			m.NamespaceFetchError = false
+			m.Namespaces.SetSize(NAMESPACE_PANEL_WIDTH-40, NAMESPACE_PANEL_HEIGHT)
+			slog.Info("Resizing", "window width", NAMESPACE_PANEL_WIDTH-40, "window heigth", NAMESPACE_PANEL_HEIGHT)
 			if msg.Err != nil {
 				m.NamespaceFetchError = true
 
@@ -33,12 +35,27 @@ func (m Model) updateNamespaceState(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			items := make([]list.Item, len(msg.Namespaces))
-			for i, namespace := range msg.Namespaces {
-				items[i] = &models.Namespace{Name: namespace.Name, Age: namespace.Age}
+			for i := range msg.Namespaces {
+				items[i] = &models.Namespace{Name: msg.Namespaces[i].Name, Age: msg.Namespaces[i].Age}
 			}
 
 			m.Namespaces.SetItems(items)
 			m.LoadingNamespaces = false
+			m.Namespaces.SetFilteringEnabled(true)
+			m.Namespaces.SetShowFilter(true)
+			for _, i := range items {
+				ns := i.(*models.Namespace)
+				slog.Info("namespace item", "name", ns.Name, "filter", ns.FilterValue())
+			}
+
+			for i, item := range m.Namespaces.Items() {
+				ns, ok := item.(*models.Namespace)
+				if !ok {
+					slog.Warn("item is not namespace", "index", i, "type", fmt.Sprintf("%T", item))
+				} else {
+					slog.Info("item filter value", "index", i, "filter", ns.FilterValue())
+				}
+			}
 			return m, nil
 
 		case tea.KeyMsg:
@@ -58,9 +75,6 @@ func (m Model) updateNamespaceState(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 
-		var cmd tea.Cmd
-		m.Namespaces, cmd = m.Namespaces.Update(msg)
-
 		switch msg.String() {
 		case "enter":
 			if m.NamespaceFetchError {
@@ -71,6 +85,9 @@ func (m Model) updateNamespaceState(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if err := kubectl.SetKubernetesContext(ctx); err != nil {
 				return m, tea.Quit
 			}
+
+			slog.Info("selected namespace", "name", selectedNamespace.Name)
+
 			if err := kubectl.SetDefaultNamespace(selectedNamespace.Name); err != nil {
 				slog.Error("update", "message", "settings defualt namespace", "error", err)
 				return m, tea.Quit
@@ -79,12 +96,31 @@ func (m Model) updateNamespaceState(msg tea.Msg) (tea.Model, tea.Cmd) {
 				fmt.Sprintf("Context switched to: %s\nNamespace switched to: %s", ctx, selectedNamespace.Name),
 			)
 			return m, tea.Quit
-		case "esc", "ctrl+c", "q":
+		case "esc", "ctrl+c":
+			if m.Namespaces.FilterState() == list.Filtering {
+				m.Namespaces.ResetFilter()
+				return m, nil
+			}
 			m.State = normalState
 			m.LoadingNamespaces = false
 			return m, nil
+		case "q":
+			if m.Namespaces.FilterState() != list.Filtering {
+				m.State = normalState
+				m.LoadingNamespaces = false
+				return m, nil
+			}
 		}
-		return m, cmd
 	}
-	return m, nil
+
+	slog.Info("msg", "type", fmt.Sprintf("%T", msg))
+	var cmd tea.Cmd
+	m.Namespaces, cmd = m.Namespaces.Update(msg)
+	vi := m.Namespaces.VisibleItems()
+	fs := m.Namespaces.FilterState()
+	fv := m.Namespaces.FilterValue()
+	slog.Info("visible items", "count", len(vi))
+	slog.Info("filter state", "state", fs.String())
+	slog.Info("filter value", "value", fv)
+	return m, cmd
 }

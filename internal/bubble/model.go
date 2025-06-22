@@ -6,6 +6,11 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 )
 
+const (
+	NAMESPACE_PANEL_WIDTH  = 95
+	NAMESPACE_PANEL_HEIGHT = 25
+)
+
 type Model struct {
 	Current                string
 	List                   list.Model
@@ -32,7 +37,7 @@ func New(contextsTitle, namespacesTitle, kubeconfig string, currentContext strin
 	setupKeyBindings(&contextsList)
 	highlightCurrentContext(currentContext, &contextsList)
 
-	namespaceList := list.New([]list.Item{}, list.NewDefaultDelegate(), 75, 25)
+	namespaceList := list.New([]list.Item{}, list.NewDefaultDelegate(), NAMESPACE_PANEL_WIDTH, NAMESPACE_PANEL_HEIGHT)
 	namespaceList.Title = namespacesTitle
 	namespaceList.SetFilteringEnabled(true)
 	namespaceList.SetShowFilter(true)
