@@ -39,15 +39,10 @@ func (m Model) View() string {
 	if m.namespaceState() {
 		if m.LoadingNamespaces {
 			msg := fmt.Sprintf("%s Loading namespaces for %s...", m.Spinner.View(), m.TargetContext)
-			style := lipgloss.NewStyle().Foreground(lipgloss.Color("5")).
-				Bold(true).
-				Render(msg)
-			return lipgloss.Place(m.Width, m.Heigth, lipgloss.Center, lipgloss.Center, style)
+			spinnerView := ui.NamespaceSpiner.Render(msg)
+			return lipgloss.Place(m.Width, m.Heigth, lipgloss.Center, lipgloss.Center, spinnerView)
 		} else {
-			namespacesView := lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				Padding(2).
-				Render(m.Namespaces.View())
+			namespacesView := ui.NamespacesLoaded.Render(m.Namespaces.View())
 			return lipgloss.Place(m.Width, m.Heigth, lipgloss.Center, lipgloss.Center, namespacesView)
 		}
 	}

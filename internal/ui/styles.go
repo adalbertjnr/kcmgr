@@ -2,8 +2,6 @@ package ui
 
 import "github.com/charmbracelet/lipgloss"
 
-const dot = " • "
-
 var (
 	ConfirmStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
@@ -31,4 +29,14 @@ var (
 	ButtonFocused = Button.Foreground(lipgloss.Color("30")).
 			Background(lipgloss.Color("9")).
 			Bold(true)
+)
+
+var (
+	NamespaceSpiner = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("5")).
+			Bold(true)
+
+	NamespacesLoaded = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				Padding(2)
 )
