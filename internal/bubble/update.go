@@ -7,6 +7,7 @@ import (
 
 	"github.com/adalbertjnr/kcmgr/internal/client"
 	"github.com/adalbertjnr/kcmgr/internal/kubectl"
+	"github.com/adalbertjnr/kcmgr/internal/models"
 	"github.com/adalbertjnr/kcmgr/internal/ui"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -26,7 +27,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.List.SetSize(msg.Width-h, msg.Height-v)
 
 		if m.DetailedView == "" {
-			if ctx, ok := m.List.SelectedItem().(*kubectl.Context); ok {
+			if ctx, ok := m.List.SelectedItem().(*models.Context); ok {
 				detailedContext, err := kubectl.GetRawContext(ctx.Context.Cluster)
 				if err != nil {
 					m.DetailedView = ui.DetailedViewPadding.Render(
@@ -50,12 +51,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.namespaceState() && m.LoadingNamespaces {
 
 			if msg.Err != nil {
-				msg.Namespaces = []string{msg.Err.Error()}
+				msg.Namespaces = []models.Namespace{
+					{Name: msg.Err.Error()},
+				}
 			}
 
 			items := make([]list.Item, len(msg.Namespaces))
 			for i, namespace := range msg.Namespaces {
-				items[i] = &kubectl.Namespace{Name: namespace}
+				items[i] = &models.Namespace{Name: namespace.Name, Age: namespace.Age}
 			}
 
 			m.Namespaces.SetItems(items)
@@ -71,14 +74,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.LoadingNamespaces = false
 				return m, nil
 			}
+			return m, nil
 		}
+
 		if !m.LoadingNamespaces && m.namespaceState() {
 			var cmd tea.Cmd
 			m.Namespaces, cmd = m.Namespaces.Update(msg)
+
 			switch msg.String() {
 			case "enter":
-				selectedNamespace := m.Namespaces.SelectedItem().(*kubectl.Namespace)
-				ctx := m.List.SelectedItem().(*kubectl.Context).Name
+				selectedNamespace := m.Namespaces.SelectedItem().(*models.Namespace)
+				ctx := m.List.SelectedItem().(*models.Context).Name
 				if err := kubectl.SetKubernetesContext(ctx); err != nil {
 					return m, tea.Quit
 				}
@@ -87,13 +93,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Quit
 				}
 				m.ContextMessage = ui.SuccessMessage.Render(
-					fmt.Sprintf("Context switched to: %s\nNamespace switched to: %s", ctx, selectedNamespace),
+					fmt.Sprintf("Context switched to: %s\nNamespace switched to: %s", ctx, selectedNamespace.Name),
 				)
 				return m, tea.Quit
 			case "esc", "ctrl+c", "q":
 				m.State = normalState
 				m.LoadingNamespaces = false
-				return m, nil
+				return m, cmd
 			}
 
 			return m, cmd
@@ -125,7 +131,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		switch {
 		case key.Matches(msg, keys.Delete):
-			if ctx, ok := m.List.SelectedItem().(*kubectl.Context); ok {
+			if ctx, ok := m.List.SelectedItem().(*models.Context); ok {
 				m.State = deleteState
 				m.PendingDeleteContext = ctx
 				return m, nil
@@ -136,7 +142,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				kubectl.SetKubernetesContext,
 			)
 		case key.Matches(msg, keys.NamespacePrompt):
-			if ctx, ok := m.List.SelectedItem().(*kubectl.Context); ok {
+			if ctx, ok := m.List.SelectedItem().(*models.Context); ok {
 				m.State = namespaceSelectState
 				m.TargetContext = ctx.Name
 				m.LoadingNamespaces = true
@@ -151,7 +157,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.List, cmd = m.List.Update(msg)
 
 	if m.List.Index() != previousIndex {
-		if ctx, ok := m.List.SelectedItem().(*kubectl.Context); ok {
+		if ctx, ok := m.List.SelectedItem().(*models.Context); ok {
 			detailedContext, err := kubectl.GetRawContext(ctx.Context.Cluster)
 			if err != nil {
 				m.DetailedView = ui.DetailedViewPadding.Render(
@@ -167,7 +173,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleContextAction(verb verb, actionFunc func(string) error) (tea.Model, tea.Cmd) {
-	if ctx, ok := m.List.SelectedItem().(*kubectl.Context); ok {
+	if ctx, ok := m.List.SelectedItem().(*models.Context); ok {
 		if err := actionFunc(ctx.Name); err != nil {
 			log.Printf("Failed to %s context: %v", verb, err)
 			return m, tea.Quit
@@ -188,7 +194,7 @@ func (m Model) handleContextAction(verb verb, actionFunc func(string) error) (te
 		return m, nil
 	case switchContext:
 		m.ContextMessage = ui.SuccessMessage.Render(
-			fmt.Sprintf("️️Context switched to: %s", m.List.SelectedItem().(*kubectl.Context).Name),
+			fmt.Sprintf("️️Context switched to: %s", m.List.SelectedItem().(*models.Context).Name),
 		)
 		return m, tea.Quit
 	}
@@ -197,7 +203,7 @@ func (m Model) handleContextAction(verb verb, actionFunc func(string) error) (te
 }
 
 type namespacesOutput struct {
-	Namespaces []string
+	Namespaces []models.Namespace
 	Err        error
 }
 

@@ -1,7 +1,7 @@
 package bubble
 
 import (
-	"github.com/adalbertjnr/kcmgr/internal/kubectl"
+	"github.com/adalbertjnr/kcmgr/internal/models"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 )
@@ -12,7 +12,7 @@ type Model struct {
 	Width                  int
 	Heigth                 int
 	State                  confirmationState
-	PendingDeleteContext   *kubectl.Context
+	PendingDeleteContext   *models.Context
 	FocusedButton          int
 	DetailedView           string
 	ContextMessage         string
@@ -33,6 +33,8 @@ func New(contextsTitle, namespacesTitle, kubeconfig string, currentContext strin
 
 	namespaceList := list.New([]list.Item{}, list.NewDefaultDelegate(), 75, 25)
 	namespaceList.Title = namespacesTitle
+	namespaceList.SetFilteringEnabled(true)
+	namespaceList.SetShowFilter(true)
 
 	sp := spinner.New()
 	// sp.Spinner = spinner.Pulse
@@ -75,7 +77,7 @@ const (
 
 func highlightCurrentContext(currentContext string, l *list.Model) {
 	for i, listItem := range l.Items() {
-		if ctx, ok := listItem.(*kubectl.Context); ok && ctx.Name == currentContext {
+		if ctx, ok := listItem.(*models.Context); ok && ctx.Name == currentContext {
 			l.Select(i)
 		}
 	}

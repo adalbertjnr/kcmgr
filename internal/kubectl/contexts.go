@@ -6,18 +6,11 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/adalbertjnr/kcmgr/internal/models"
 	"github.com/charmbracelet/bubbles/list"
 )
 
 var execCommand = exec.Command
-
-type Context struct {
-	Name    string `json:"name"`
-	Context struct {
-		Cluster string `json:"cluster"`
-		User    string `json:"user"`
-	} `json:"context"`
-}
 
 type Cluster struct {
 	Name    string `json:"name"`
@@ -32,18 +25,6 @@ type User struct {
 	User interface{} `json:"user"`
 }
 
-func (c *Context) Title() string {
-	return fmt.Sprintf("Name: %s", c.Name)
-}
-
-func (c *Context) Description() string {
-	return fmt.Sprintf("Cluster: %s", c.Context.Cluster)
-}
-
-func (c *Context) FilterValue() string {
-	return c.Name
-}
-
 func KubernetesContexts() ([]list.Item, error) {
 	contextsCommand := execCommand("kubectl", "config", "view", "-o", "json")
 	contextsOutput, err := contextsCommand.CombinedOutput()
@@ -52,7 +33,7 @@ func KubernetesContexts() ([]list.Item, error) {
 	}
 
 	var raw struct {
-		Contexts []Context `json:"contexts"`
+		Contexts []models.Context `json:"contexts"`
 	}
 	if err := json.Unmarshal(contextsOutput, &raw); err != nil {
 		return nil, err
@@ -68,7 +49,7 @@ func KubernetesContexts() ([]list.Item, error) {
 
 type RawContext struct {
 	Cluster Cluster
-	Context Context
+	Context models.Context
 	User    User
 }
 
@@ -87,7 +68,7 @@ func GetRawContext(clusterName string) (string, error) {
 		return "", err
 	}
 
-	var context Context
+	var context models.Context
 	if err := runKubectlJSONPath(contextQuery, &context); err != nil {
 		return "", err
 	}

@@ -77,11 +77,3 @@ func (m Model) deleteState() bool {
 func (m Model) namespaceState() bool {
 	return m.State == namespaceSelectState
 }
-
-func checkBox(label string, checked bool) string {
-	if checked {
-		return ui.CheckBoxStyle.Render("[X]" + label)
-	}
-
-	return fmt.Sprintf("[ ] %s", label)
-}

@@ -5,6 +5,8 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/adalbertjnr/kcmgr/internal/models"
 )
 
 var originalExecCommand = execCommand
@@ -70,7 +72,7 @@ func TestKubernetesContexts(t *testing.T) {
 		t.Errorf("Expected 2 contexts, got %d", len(contexts))
 	}
 
-	ctx, ok := contexts[0].(*Context)
+	ctx, ok := contexts[0].(*models.Context)
 	if !ok {
 		t.Errorf("Expected type *Context, got %T", contexts[0])
 	}
@@ -106,7 +108,7 @@ func TestGetRawContext(t *testing.T) {
 
 func TestContextUnmarshal(t *testing.T) {
 	raw := `{"name":"ctx-1","context":{"cluster":"cluster-1","user":"user-1"}}`
-	var ctx Context
+	var ctx models.Context
 	err := json.Unmarshal([]byte(raw), &ctx)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal Context: %v", err)

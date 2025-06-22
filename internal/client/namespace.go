@@ -3,9 +3,12 @@ package client
 import (
 	"context"
 	"flag"
+	"log/slog"
 	"path/filepath"
 	"time"
 
+	"github.com/adalbertjnr/kcmgr/internal/models"
+	"github.com/adalbertjnr/kcmgr/internal/util"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -28,7 +31,7 @@ func GetKubeConfigFile() string {
 	return kubeconfig
 }
 
-func GetNamespacesByContext(kubeconfig, kubernetesContext string) ([]string, error) {
+func GetNamespacesByContext(kubeconfig, kubernetesContext string) ([]models.Namespace, error) {
 	configLoader := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig},
 		&clientcmd.ConfigOverrides{CurrentContext: kubernetesContext},
@@ -52,9 +55,17 @@ func GetNamespacesByContext(kubeconfig, kubernetesContext string) ([]string, err
 		return nil, err
 	}
 
-	namespaces := make([]string, len(list.Items))
+	namespaces := make([]models.Namespace, len(list.Items))
 	for i, namespace := range list.Items {
-		namespaces[i] = namespace.Name
+		slog.Info("namespace", "parsing", namespace)
+		timeStamp, err := util.ParseTime(namespace.CreationTimestamp.String())
+		if err != nil {
+			timeStamp = namespace.CreationTimestamp.String()
+		}
+		namespaces[i] = models.Namespace{
+			Name: namespace.Name,
+			Age:  timeStamp,
+		}
 	}
 
 	return namespaces, nil
