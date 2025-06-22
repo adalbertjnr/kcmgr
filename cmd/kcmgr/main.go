@@ -41,7 +41,7 @@ func main() {
 	}
 
 	kubeconfig := client.GetKubeConfigFile()
-	slog.Debug("kubeconfig", "path", kubeconfig)
+	slog.Info("kubeconfig", "path", kubeconfig)
 
 	model := bubble.New(
 		contextsWindowTitle,
@@ -51,7 +51,6 @@ func main() {
 		contextItems,
 	)
 
-	log.Println(model.Current)
 	p := tea.NewProgram(model, tea.WithAltScreen())
 	m, err := p.Run()
 	if err != nil {

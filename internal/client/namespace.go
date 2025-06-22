@@ -9,6 +9,7 @@ import (
 
 	"github.com/adalbertjnr/kcmgr/internal/models"
 	"github.com/adalbertjnr/kcmgr/internal/util"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -16,6 +17,10 @@ import (
 )
 
 const TimeoutDuration = time.Second * 5
+
+type NamespaceLister interface {
+	List(ctx context.Context, opts v1.ListOptions) (*corev1.NamespaceList, error)
+}
 
 func GetKubeConfigFile() string {
 	var kubeconfig string
@@ -50,11 +55,19 @@ func GetNamespacesByContext(kubeconfig, kubernetesContext string) ([]models.Name
 	ctx, cancel := context.WithTimeout(context.Background(), TimeoutDuration)
 	defer cancel()
 
-	list, err := clientSet.CoreV1().Namespaces().List(ctx, v1.ListOptions{})
+	return listNamespaces(ctx, clientSet.CoreV1().Namespaces())
+}
+
+func listNamespaces(ctx context.Context, l NamespaceLister) ([]models.Namespace, error) {
+	list, err := l.List(ctx, v1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
+	return toModelNamespace(list)
+}
+
+func toModelNamespace(list *corev1.NamespaceList) ([]models.Namespace, error) {
 	namespaces := make([]models.Namespace, len(list.Items))
 	for i, namespace := range list.Items {
 		slog.Info("namespace", "parsing", namespace)
