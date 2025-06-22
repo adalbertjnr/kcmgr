@@ -56,18 +56,28 @@ func (m Model) handleContextAction(verb verb, actionFunc func(string) error) (te
 	return m, tea.Quit
 }
 
-type namespacesOutput struct {
+type NamespacesOutput struct {
 	Namespaces []models.Namespace
 	Err        error
 }
 
 func (m Model) fetchNamespacesCmd(contextName string) tea.Cmd {
+	cache, ok := m.NamespaceCache[contextName]
+
 	return func() tea.Msg {
+		if ok {
+			slog.Info("fetch namespaces", "cache", "hit", "context", contextName)
+			return cache
+		}
+
 		namespaces, err := client.GetNamespacesByContext(m.KubeConfig, contextName)
 		if err != nil {
 			slog.Error("update", "message", "fetch namespaces cmd", "error", err)
 		}
-		slog.Info("fetch namespaces", "namespaces", namespaces)
-		return namespacesOutput{Namespaces: namespaces, Err: err}
+
+		messageOutput := NamespacesOutput{Namespaces: namespaces, Err: err}
+		m.NamespaceCache[contextName] = messageOutput
+		slog.Info("fetch namespaces", "namespaces", namespaces, "cache", "not hit")
+		return messageOutput
 	}
 }

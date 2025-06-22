@@ -22,7 +22,7 @@ func (m Model) updateNamespaceState(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, cmd
 			}
 
-		case namespacesOutput:
+		case NamespacesOutput:
 			m.NamespaceFetchError = false
 			m.Namespaces.SetSize(NAMESPACE_PANEL_WIDTH-40, NAMESPACE_PANEL_HEIGHT)
 			slog.Info("Resizing", "window width", NAMESPACE_PANEL_WIDTH-40, "window heigth", NAMESPACE_PANEL_HEIGHT)

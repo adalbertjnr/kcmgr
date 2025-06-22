@@ -28,6 +28,7 @@ type Model struct {
 	KubeConfig             string
 	LoadingNamespaces      bool
 	NamespaceFetchError    bool
+	NamespaceCache         map[string]NamespacesOutput
 }
 
 func New(contextsTitle, namespacesTitle, kubeconfig string, currentContext string, contexts []list.Item) Model {
@@ -55,12 +56,13 @@ func New(contextsTitle, namespacesTitle, kubeconfig string, currentContext strin
 	// sp.Spinner = spinner.Moon
 	sp.Spinner = spinner.Points
 	return Model{
-		List:       contextsList,
-		Current:    currentContext,
-		State:      normalState,
-		Namespaces: namespaceList,
-		Spinner:    sp,
-		KubeConfig: kubeconfig,
+		List:           contextsList,
+		Current:        currentContext,
+		State:          normalState,
+		Namespaces:     namespaceList,
+		Spinner:        sp,
+		KubeConfig:     kubeconfig,
+		NamespaceCache: make(map[string]NamespacesOutput),
 	}
 }
 
