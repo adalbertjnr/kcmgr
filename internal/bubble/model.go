@@ -22,6 +22,7 @@ type Model struct {
 	Spinner                spinner.Model
 	KubeConfig             string
 	LoadingNamespaces      bool
+	NamespaceFetchError    bool
 }
 
 func New(contextsTitle, namespacesTitle, kubeconfig string, currentContext string, contexts []list.Item) Model {

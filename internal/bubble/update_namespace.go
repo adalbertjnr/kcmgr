@@ -23,7 +23,9 @@ func (m Model) updateNamespaceState(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case namespacesOutput:
+			m.NamespaceFetchError = false
 			if msg.Err != nil {
+				m.NamespaceFetchError = true
 
 				msg.Namespaces = []models.Namespace{
 					{Name: msg.Err.Error()},
@@ -61,6 +63,9 @@ func (m Model) updateNamespaceState(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch msg.String() {
 		case "enter":
+			if m.NamespaceFetchError {
+				return m, tea.Quit
+			}
 			selectedNamespace := m.Namespaces.SelectedItem().(*models.Namespace)
 			ctx := m.List.SelectedItem().(*models.Context).Name
 			if err := kubectl.SetKubernetesContext(ctx); err != nil {
