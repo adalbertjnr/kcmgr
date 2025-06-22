@@ -43,7 +43,7 @@ func New(contextsTitle, namespacesTitle, kubeconfig string, currentContext strin
 	// sp.Spinner = spinner.Globe
 	// sp.Spinner = spinner.Hamburger
 	// sp.Spinner = spinner.Jump
-	// sp.Spinner = spinner.Line probably this one
+	// sp.Spinner = spinner.Line
 	// sp.Spinner = spinner.Meter
 	// sp.Spinner = spinner.MiniDot
 	// sp.Spinner = spinner.Moon
