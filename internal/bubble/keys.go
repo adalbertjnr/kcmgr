@@ -6,8 +6,9 @@ import (
 )
 
 type keyMap struct {
-	Delete key.Binding
-	Enter  key.Binding
+	Delete          key.Binding
+	Enter           key.Binding
+	NamespacePrompt key.Binding
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
@@ -23,22 +24,27 @@ func (k keyMap) FullHelp() [][]key.Binding {
 }
 
 var keys = keyMap{
+	NamespacePrompt: key.NewBinding(
+		key.WithKeys("ctrl+n"),
+		key.WithHelp("ctrl+n", "set ns"),
+	),
 	Enter: key.NewBinding(
 		key.WithKeys("enter"),
-		key.WithHelp("enter", "select the context"),
+		key.WithHelp("enter", "sel the ctx"),
 	),
 	Delete: key.NewBinding(
 		key.WithKeys("ctrl+d"),
-		key.WithHelp("ctrl+d", "delete a context"),
+		key.WithHelp("ctrl+d", "del the ctx"),
 	),
 }
 
 func setupKeyBindings(list *list.Model) {
 	list.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{keys.Delete, keys.Enter}
+		return []key.Binding{keys.Delete, keys.Enter, keys.NamespacePrompt}
 	}
 
 	list.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{keys.Delete, keys.Enter}
+		return []key.Binding{keys.Delete, keys.Enter, keys.NamespacePrompt}
 	}
+
 }

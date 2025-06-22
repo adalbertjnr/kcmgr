@@ -4,10 +4,18 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 
 	"github.com/adalbertjnr/kcmgr/internal/bubble"
+	"github.com/adalbertjnr/kcmgr/internal/client"
 	"github.com/adalbertjnr/kcmgr/internal/kubectl"
+	"github.com/adalbertjnr/kcmgr/internal/logger"
 	tea "github.com/charmbracelet/bubbletea"
+)
+
+const (
+	contextsWindowTitle   = "Current + Available Contexts"
+	namespacesWindowTitle = "Available Namespaces"
 )
 
 func main() {
@@ -16,34 +24,37 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "debug options")
 	flag.Parse()
 
-	if debug {
-		file, err := tea.LogToFile("debug.log", "debug")
-		if err != nil {
-			log.Println("Error: ", err)
-			return
-		}
-		defer file.Close()
+	cleanup, err := logger.Init(debug)
+	if err != nil {
+		log.Fatal("failed to initialize logger: ", err)
 	}
+	defer cleanup()
 
 	currentContext, err := kubectl.CurrentContext()
 	if err != nil {
-		log.Println("Error getting current context: ", err)
-		return
+		log.Fatal("Error getting current context: ", err)
 	}
 
 	contextItems, err := kubectl.KubernetesContexts()
 	if err != nil {
-		log.Println("Error getting contexts: ", err)
-		return
+		log.Fatal("Error getting contexts: ", err)
 	}
 
-	appTitle := "Current + Available Contexts"
-	appModel := bubble.New(appTitle, currentContext, contextItems)
+	kubeconfig := client.GetKubeConfigFile()
+	slog.Info("kubeconfig", "path", kubeconfig)
 
-	p := tea.NewProgram(appModel, tea.WithAltScreen())
+	model := bubble.New(
+		contextsWindowTitle,
+		namespacesWindowTitle,
+		kubeconfig,
+		currentContext,
+		contextItems,
+	)
+
+	p := tea.NewProgram(model, tea.WithAltScreen())
 	m, err := p.Run()
 	if err != nil {
-		fmt.Println("Error running program: ", err)
+		log.Fatal("Error running program: ", err)
 		return
 	}
 

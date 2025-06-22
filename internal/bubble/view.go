@@ -36,22 +36,39 @@ func (m Model) View() string {
 		)
 	}
 
+	if m.namespaceState() {
+		if m.LoadingNamespaces {
+			msg := fmt.Sprintf("%s Loading namespaces for %s...", m.Spinner.View(), m.TargetContext)
+			spinnerView := ui.NamespaceSpiner.Render(msg)
+			return lipgloss.Place(m.Width, m.Heigth, lipgloss.Center, lipgloss.Center, spinnerView)
+		} else {
+			namespacesView := ui.NamespacesLoaded.Render(m.Namespaces.View())
+			return lipgloss.Place(m.Width, m.Heigth, lipgloss.Center, lipgloss.Center, namespacesView)
+		}
+	}
+
 	width := (m.Width / 2) - 2
 	heigth := m.Heigth - 2
 
 	listView := lipgloss.NewStyle().
 		Width(width).
 		Height(m.Heigth).
-		BorderForeground(lipgloss.Color("8")).
 		Render(m.List.View())
 
 	detailedView := lipgloss.NewStyle().
 		Width(width).
 		Height(heigth).
-		Border(lipgloss.ThickBorder()).
-		MarginLeft(1).
+		Border(lipgloss.RoundedBorder()).
+		Padding(0, 1).
 		BorderForeground(lipgloss.Color("#00FFD7")).
 		Render(m.DetailedView)
 
 	return lipgloss.JoinHorizontal(lipgloss.Bottom, listView, detailedView)
+}
+
+func (m Model) deleteState() bool {
+	return m.State == deleteState
+}
+func (m Model) namespaceState() bool {
+	return m.State == namespaceSelectState
 }
