@@ -88,7 +88,7 @@ func GetRawContext(clusterName string) (string, error) {
 }
 
 func runKubectlJSONPath(query string, out any) error {
-	queryCommand := execCommand("kubectl", "config", "view", "--raw", "-o", query)
+	queryCommand := execCommand("kubectl", "config", "view", "-o", query)
 	output, err := queryCommand.CombinedOutput()
 	if err != nil {
 		return err

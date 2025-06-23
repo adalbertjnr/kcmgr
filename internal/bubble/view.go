@@ -59,7 +59,6 @@ func (m Model) View() string {
 		Width(width).
 		Height(heigth).
 		Border(lipgloss.RoundedBorder()).
-		Padding(0, 1).
 		BorderForeground(lipgloss.Color("#00FFD7")).
 		Render(m.DetailedView)
 
