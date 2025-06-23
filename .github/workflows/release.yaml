@@ -10,6 +10,7 @@ on:
     branches:
       - main
     paths-ignore:
+      - ".github/workflows/*.yaml"
       - "*.md"
 
 permissions:
@@ -20,16 +21,21 @@ jobs:
   call-tests:
     uses: ./.github/workflows/tests.yaml
 
+  get-version:
+    if: github.event_name == 'push'
+    needs: call-tests
+    uses: ./.github/workflows/pr.yaml
+
   create-tags:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    needs: call-tests
+    needs: get-version
     steps:
       - uses: rymndhng/release-on-push-action@master
         with:
-          bump_version_scheme: major
+          bump_version_scheme: ${{ needs.get-version.outputs.bump_version }}
           tag_prefix: v
 
   releaser:
