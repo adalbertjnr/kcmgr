@@ -13,7 +13,8 @@ var (
 			Bold(true)
 
 	DetailedViewPadding = lipgloss.NewStyle().
-				PaddingTop(3)
+				PaddingTop(2).
+				PaddingLeft(1)
 
 	CheckBoxStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("236"))

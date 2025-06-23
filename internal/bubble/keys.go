@@ -30,11 +30,11 @@ var keys = keyMap{
 	),
 	Enter: key.NewBinding(
 		key.WithKeys("enter"),
-		key.WithHelp("enter", "sel the ctx"),
+		key.WithHelp("enter", "enter"),
 	),
 	Delete: key.NewBinding(
 		key.WithKeys("ctrl+d"),
-		key.WithHelp("ctrl+d", "del the ctx"),
+		key.WithHelp("ctrl+d", "delete"),
 	),
 }
 
