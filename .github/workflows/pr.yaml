@@ -1,0 +1,64 @@
+name: Mapping Version
+on:
+  workflow_call:
+    outputs:
+      bump_version:
+        description: "Bump version to export"
+        value: ${{ jobs.version-getter.outputs.bump_version }}
+
+jobs:
+  version-getter:
+    outputs:
+      bump_version: ${{ steps.evalute-version.outputs.bump }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log greeting Time
+        id: set-result
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const githubCommitSHA = process.env.GITHUB_SHA;
+            const { owner, repo } = context.repo;
+
+            const pullRequestOutput = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: "closed",
+              per_page: 5,
+            });
+
+            const pullRequest = pullRequestOutput.data.find(
+              (p) => p.merge_commit_sha === githubCommitSHA
+            );
+
+            if (pullRequest) {
+              core.info(`Merged PR ${pullRequest.number}`);
+              core.setOutput("source_branch", pullRequest.head.ref);
+            } else {
+              core.setFailed(`No PR matching the githubCommitSHA: ${githubCommitSHA}`);
+            }
+
+      - name: Evalute Version
+        id: evalute-version
+        run: |
+          prSourceBranch="${{ steps.set-result.outputs.source_branch }}"
+          echo "Branch: $prSourceBranch"
+          prefixBranch="${prSourceBranch%%/*}"
+
+          case "$prefixBranch" in
+            fix|patch|hotfix)
+              bump="patch"
+              ;;
+            feature|minor|develop)
+              bump="minor"
+              ;;
+            major|breaking)
+              bump="major"
+              ;;
+            *)
+              bump="patch"
+              ;;
+          esac
+
+          echo "Version bump level: $bump"
+          echo "bump=$bump" >> $GITHUB_OUTPUT
