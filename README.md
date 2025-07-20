@@ -4,18 +4,18 @@ A **simple Go TUI app** to help you **navigate**, **switch**, and **delete** Kub
 
 ---
 
-## ✨ Features
+## Features
 
-- ✅ **List & navigate** through your available Kubernetes contexts
-- ✅ **Switch** active context with a single keypress
-- ✅ **Delete** unwanted contexts with confirmation prompt
-- ✅ **Clean and responsive TUI** powered by [Bubble Tea](https://github.com/charmbracelet/bubbletea) and [Lipgloss](https://github.com/charmbracelet/lipgloss)
+- **List & navigate** through your available Kubernetes contexts
+- **Switch** active context with a single keypress
+- **Delete** unwanted contexts with confirmation prompt
+- **Clean and responsive TUI** powered by [Bubble Tea](https://github.com/charmbracelet/bubbletea) and [Lipgloss](https://github.com/charmbracelet/lipgloss)
 
 ---
 
-## 🖥️ Screenshots
+## Screenshots
 
-### 1️⃣ Context Selector (Navigation Panel)
+### Context Selector (Navigation Panel)
 
 Browse and select contexts:
 
@@ -23,7 +23,7 @@ Browse and select contexts:
 
 ---
 
-### 2️⃣ Delete Context (Confirmation Prompt)
+### Delete Context (Confirmation Prompt)
 
 Confirm before deleting:
 
@@ -31,13 +31,13 @@ Confirm before deleting:
 
 ---
 
-### 3️⃣ Select Default Namespace with a Context
+### Select Default Namespace with a Context
 
 ![Select Default namespace](./assets/namespaces-kc.png)
 
-## 🖥️ Keyboard Shortcuts & Navigation
+## Keyboard Shortcuts & Navigation
 
-### 📋 Contexts Screen
+### Contexts Screen
 
 | Key / Shortcut   | Action                                                                |
 | ---------------- | --------------------------------------------------------------------- |
@@ -52,7 +52,7 @@ Confirm before deleting:
 
 ---
 
-### 🗂️ Namespace Panel (after pressing `ctrl+n`)
+### Namespace Panel (after pressing `ctrl+n`)
 
 | Key / Shortcut   | Action                                                    |
 | ---------------- | --------------------------------------------------------- |
@@ -65,13 +65,13 @@ Confirm before deleting:
 
 ---
 
-### ✅ Notes:
+### Notes:
 
 - **Filter Mode**: When you press `/`, the app enters filter mode. Press `esc` or `ctrl+c` to exit filter mode and show the full list again.
 - **Delete Confirmation**: When pressing `ctrl+d`, a confirmation prompt will appear before deleting the context.
 - **Namespace Fetching**: Namespaces for a context are cached after first fetch for performance.
 
-## 📦 Installation
+## Installation
 
 ```bash
   Download the latest release
